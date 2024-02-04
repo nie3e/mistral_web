@@ -1,0 +1,21 @@
+version: "3.8"
+services:
+  mistral:
+    build:
+      context: .
+    ports:
+      - "7860:7860"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+    environment:
+      - model_dir=/model/
+    volumes:
+      - X:/Mistral-7B-Instruct-v0.2/model:/model
+    entrypoint:
+      - python
+      - /app/src/mistral_web/app.py
