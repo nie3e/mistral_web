@@ -78,11 +78,11 @@ class MyMistralChat:
             model_args["load_in_4bit"] = True
         elif load_in_8bit:
             model_args["load_in_8bit"] = True
-        elif use_flash_attention_2:
-            model_args["use_flash_attention_2"] = True
-            model_args["torch_dtype"] = torch.bfloat16
         else:
             model_args["torch_dtype"] = torch.bfloat16
+
+        if use_flash_attention_2:
+            model_args["use_flash_attention_2"] = True
 
         if device_map_auto:
             model_args["device_map"] = "auto"
