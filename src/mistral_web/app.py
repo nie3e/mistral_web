@@ -11,37 +11,38 @@ from mistral_chat import MyMistralChat
 # Variables to load different model types
 model_args = {
     "float16": {"device_map_auto": True},
+    "float16 (flash attention)": {"use_flash_attention_2": True,
+                                  "device_map_auto": True},
     "4 bit": {"load_in_4bit": True, "device_map_auto": True},
     "4 bit (flash attention)": {"load_in_4bit": True, "device_map_auto": True,
                                 "use_flash_attention_2": True},
     "8 bit": {"load_in_8bit": True, "device_map_auto": True},
     "8 bit (flash attention)": {"load_in_8bit": True, "device_map_auto": True,
                                 "use_flash_attention_2": True},
-    "flash attention": {"use_flash_attention_2": True, "device_map_auto": True}
 }
 
 # Initialize the MyMistralChat instance
 chat = MyMistralChat()
 
 
-def reload_model(choice: str, current_model: str) -> str:
+def reload_model(choice: str) -> str:
     """Reloads a new model based on user selection.
     If the selected model is the current one, no action is taken.
 
     Parameters:
         choice (str): User-selected model to load.
-        current_model (str): The currently loaded model.
 
     Returns:
         str: Updated model string.
     """
-    if choice == current_model:
+    global chat
+    if choice == chat.current_conf:
         return choice
 
-    global chat
     try:
         chat.unload_model()
-        chat.load_model(chat.checkpoint, chat.device, **model_args[choice])
+        chat.load_model(chat.checkpoint, chat.device, choice,
+                        **model_args[choice])
     except Exception as e:
         gr.Info(str(e))
         result = "Error - no model loaded."
@@ -56,7 +57,10 @@ def main() -> int:
     with gr.Blocks() as demo:
         with gr.Row():
             with gr.Column(scale=1):
-                model_text = gr.Label(label="model", value="No model loaded")
+                model_text = gr.Label(
+                    label="model",
+                    value=lambda: chat.current_conf or "No model loaded"
+                )
                 model_type = gr.Dropdown(
                     label="Available models",
                     choices=list(model_args.keys()),
@@ -65,7 +69,7 @@ def main() -> int:
                 submit_type = gr.Button(value="Load model")
                 submit_type.click(
                     reload_model,
-                    inputs=[model_type, model_text],
+                    inputs=[model_type],
                     outputs=[model_text]
                 )
             with gr.Column(scale=7):

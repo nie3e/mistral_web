@@ -41,11 +41,13 @@ class MyMistralChat:
         self.checkpoint = checkpoint
         self.model = None
         self.tokenizer = None
+        self.current_conf = None
 
     def load_model(
         self,
         checkpoint: str = get_model_checkpoint(),
         device: str = "cuda",
+        configuration_name: str = None,
         load_in_4bit: bool = False,
         load_in_8bit: bool = False,
         use_flash_attention_2: bool = False,
@@ -56,6 +58,7 @@ class MyMistralChat:
         Parameters:
             checkpoint (str): The path to the model checkpoint.
             device (str): CUDA or CPU.
+            configuration_name (str): Model configuration name.
             load_in_4bit (bool): Whether to load the model with 4-bit
                 quantization
             load_in_8bit (bool): Whether to load the model with 8-bit
@@ -95,6 +98,7 @@ class MyMistralChat:
         )
         if not (device_map_auto or load_in_4bit or load_in_8bit):
             self.model.to(self.device)
+        self.current_conf = configuration_name
         logger.info("Model loaded!")
 
     def unload_model(self):
@@ -106,6 +110,7 @@ class MyMistralChat:
             self.tokenizer = None
         if self.device == "cuda":
             torch.cuda.empty_cache()
+        self.current_conf = None
 
     def stream_msg_history(self, message: str, history: list[str]) -> str:
         """Performs inference on each message in the given message history,
