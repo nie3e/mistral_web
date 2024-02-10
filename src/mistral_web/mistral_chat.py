@@ -2,6 +2,7 @@ from transformers import (AutoModelForCausalLM, AutoTokenizer,
                           TextIteratorStreamer)
 from config import logger, get_model_checkpoint
 import torch
+import gc
 from threading import Thread
 from itertools import cycle
 
@@ -110,6 +111,8 @@ class MyMistralChat:
             self.tokenizer = None
         if self.device == "cuda":
             torch.cuda.empty_cache()
+            torch.cuda.reset_peak_memory_stats()
+        gc.collect()
         self.current_conf = None
 
     def stream_msg_history(self, message: str, history: list[str]) -> str:

@@ -25,7 +25,7 @@ model_args = {
 chat = MyMistralChat()
 
 
-def reload_model(choice: str) -> str:
+def load_model(choice: str) -> str:
     """Reloads a new model based on user selection.
     If the selected model is the current one, no action is taken.
 
@@ -52,26 +52,39 @@ def reload_model(choice: str) -> str:
     return result
 
 
+def unload_model() -> None:
+    global chat
+    if not chat.model:
+        gr.Info("No model loaded")
+        return
+    chat.unload_model()
+
+
 def main() -> int:
     """Entry point function for the web app."""
     with gr.Blocks() as demo:
         with gr.Row():
             with gr.Column(scale=1):
-                model_text = gr.Label(
-                    label="model",
-                    value=lambda: chat.current_conf or "No model loaded"
-                )
-                model_type = gr.Dropdown(
-                    label="Available models",
-                    choices=list(model_args.keys()),
-                    value="float16"
-                )
-                submit_type = gr.Button(value="Load model")
-                submit_type.click(
-                    reload_model,
-                    inputs=[model_type],
-                    outputs=[model_text]
-                )
+                with gr.Group():
+                    model_text = gr.Label(
+                        label="model",
+                        value=lambda: chat.current_conf or "No model loaded"
+                    )
+                    model_type = gr.Dropdown(
+                        label="Available models",
+                        choices=list(model_args.keys()),
+                        value="float16"
+                    )
+                    with gr.Row():
+                        load_model_btn = gr.Button(value="Load model",
+                                                   variant="primary")
+                        unload_model_btn = gr.Button(value="Unload model")
+                    load_model_btn.click(
+                        load_model,
+                        inputs=[model_type],
+                        outputs=[model_text]
+                    )
+                    unload_model_btn.click(unload_model)
             with gr.Column(scale=7):
                 ci = gr.ChatInterface(
                     chat.stream_msg_history,
