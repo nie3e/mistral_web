@@ -26,7 +26,7 @@ chat = MyMistralChat()
 
 
 def load_model(choice: str) -> str:
-    """Reloads a new model based on user selection.
+    """Loads a new model based on user selection.
     If the selected model is the current one, no action is taken.
 
     Parameters:
@@ -53,6 +53,9 @@ def load_model(choice: str) -> str:
 
 
 def unload_model() -> None:
+    """Unloads the currently loaded model.
+    If no model is loaded, no action is taken.
+    """
     global chat
     if not chat.model:
         gr.Info("No model loaded")
