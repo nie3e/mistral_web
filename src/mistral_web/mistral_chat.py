@@ -1,6 +1,7 @@
 from transformers import (AutoModelForCausalLM, AutoTokenizer,
                           TextIteratorStreamer)
 from config import logger, get_model_checkpoint
+from accelerate.utils import release_memory
 import torch
 import gc
 from threading import Thread
@@ -106,9 +107,12 @@ class MyMistralChat:
         """Unloads the loaded model and tokenizer, and frees GPU memory if the
         model was on CUDA."""
         if self.model:
+            release_memory(self.model)
             self.model = None
+            gc.collect()
         if self.tokenizer:
             self.tokenizer = None
+            gc.collect()
         if self.device == "cuda":
             torch.cuda.empty_cache()
             torch.cuda.reset_peak_memory_stats()
