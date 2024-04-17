@@ -1,5 +1,5 @@
 from transformers import (AutoModelForCausalLM, AutoTokenizer,
-                          TextIteratorStreamer)
+                          TextIteratorStreamer, BitsAndBytesConfig)
 from config import logger, get_model_checkpoint
 from accelerate.utils import release_memory
 import torch
@@ -81,6 +81,11 @@ class MyMistralChat:
         }
         if load_in_4bit:
             model_args["load_in_4bit"] = True
+            model_args["quantization_config"] = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_compute_dtype=torch.bfloat16,
+                bnb_4bit_quant_type="nf4"
+            )
         elif load_in_8bit:
             model_args["load_in_8bit"] = True
         else:
@@ -140,7 +145,8 @@ class MyMistralChat:
             {"role": u, "content": msg}
             for u, msg in zip(cycle(["user", "assistant"]), messages)
         ]
-        streamer = TextIteratorStreamer(self.tokenizer, skip_prompt=True)
+        streamer = TextIteratorStreamer(self.tokenizer, skip_prompt=True,
+                                        skip_special_tokens=True)
         encodeds = self.tokenizer.apply_chat_template(
             messages_dict, return_tensors="pt", add_generation_prompt=True
         )
