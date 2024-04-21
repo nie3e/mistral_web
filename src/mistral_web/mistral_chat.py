@@ -80,7 +80,6 @@ class MyMistralChat:
             "force_download": False,
         }
         if load_in_4bit:
-            model_args["load_in_4bit"] = True
             model_args["quantization_config"] = BitsAndBytesConfig(
                 load_in_4bit=True,
                 bnb_4bit_compute_dtype=torch.bfloat16,
