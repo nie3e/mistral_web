@@ -88,9 +88,29 @@ def main() -> int:
                         outputs=[model_text]
                     )
                     unload_model_btn.click(unload_model)
+                with gr.Group():
+                    repetition_penalty = gr.Slider(
+                        label="Repetition penalty",
+                        minimum=0.0, maximum=1.0, step=0.1, value=1.0
+                    )
+                    temperature = gr.Slider(
+                        label="Temperature",
+                        minimum=0.1, maximum=3.0, step=0.1, value=1.0
+                    )
+                    top_k = gr.Slider(
+                        label="Top K",
+                        minimum=0, maximum=100, step=1, value=50
+                    )
+                    top_p = gr.Slider(
+                        label="Top P",
+                        minimum=0.0, maximum=1.0, step=0.1, value=1.0
+                    )
             with gr.Column(scale=7):
                 ci = gr.ChatInterface(
                     chat.stream_msg_history,
+                    additional_inputs=[
+                        repetition_penalty, temperature, top_k, top_p
+                    ]
                 )
                 ci.chatbot.height = 700
     demo.launch(server_name="0.0.0.0")

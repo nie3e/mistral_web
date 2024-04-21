@@ -124,7 +124,10 @@ class MyMistralChat:
         gc.collect()
         self.current_conf = None
 
-    def stream_msg_history(self, message: str, history: list[str]) -> str:
+    def stream_msg_history(
+            self, message: str, history: list[str], repetition_penalty: float,
+            temperature: float, top_k: int, top_p: float
+    ) -> str:
         """Performs inference on each message in the given message history,
         appending the response for each message to the output string.
 
@@ -132,6 +135,16 @@ class MyMistralChat:
             message (str): The new message to send for inference.
             history (list): A list containing all previous messages in the
                 conversation.
+            # https://huggingface.co/docs/transformers/v4.40.0/en/main_classes/text_generation#transformers.GenerationConfig
+            repetition_penalty (float): The parameter for repetition penalty.
+                1.0 means no penalty.
+            temperature (float): The value used to modulate the next token
+                probabilities.
+            top_k (int): The number of highest probability vocabulary tokens to
+                keep for top-k-filtering.
+            top_p (float): If set to float < 1, only the smallest set of most
+                probable tokens with probabilities that add up to top_p or
+                higher are kept for generation.
 
         Returns:
             str: A concatenated string of each message response in order,
@@ -150,10 +163,14 @@ class MyMistralChat:
         encodeds = self.tokenizer.apply_chat_template(
             messages_dict, return_tensors="pt", add_generation_prompt=True
         )
-        logger.info(f"Input tokens: {encodeds.shape[1]}")
+        logger.info(f"Input tokens: {encodeds.shape[1]}, settings: "
+                    f"{repetition_penalty=} {temperature=} {top_k=} {top_p=}")
         model_inputs = encodeds.to(self.device)
-        generation_kwargs = dict(inputs=model_inputs, streamer=streamer,
-                                 do_sample=True, max_new_tokens=8000)
+        generation_kwargs = dict(
+            inputs=model_inputs, streamer=streamer, do_sample=True,
+            max_new_tokens=8000, repetition_penalty=repetition_penalty,
+            temperature=temperature, top_k=top_k, top_p=top_p
+        )
         thread = Thread(target=self.model.generate, kwargs=generation_kwargs)
         thread.start()
         response = ""
